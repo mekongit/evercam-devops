@@ -1,0 +1,20 @@
+- include: setup.yml
+  tags: configure
+
+- include: deploy.yml
+  tags: deploy
+
+- include: hotcode.yml
+  tags: hotcode
+
+- name: Stop evercam-media
+  shell: systemctl stop evercam_media.service
+  become: yes
+  failed_when: False
+  tags: deploy
+
+- name: Start evercam-media
+  shell: systemctl start evercam_media.service
+  become: yes
+  failed_when: False
+  tags: deploy

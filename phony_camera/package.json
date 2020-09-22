@@ -1,0 +1,19 @@
+{
+  "name": "phony_camera",
+  "version": "1.0.0",
+  "description": "Phony Camera for Evercam project, so you can run it locally offline, if needed",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "phony",
+    "camera",
+    "evercam"
+  ],
+  "dependencies": {
+    "express": "^4.2.13"
+  },
+  "author": "Eugene HP",
+  "license": "MIT"
+}

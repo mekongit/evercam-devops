@@ -1,0 +1,6 @@
+  # Clone nginx rtmp monitor repo
+- git:
+    repo: 'https://github.com/azharmalik3/nginx-rtmp-monitoring.git'
+    dest: /opt/nginx-rtmp-monitoring
+    clone: yes
+    update: no

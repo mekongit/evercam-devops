@@ -1,0 +1,17 @@
+- hosts: "{{target}}"
+  user: "{{ansible_ssh_user}}"
+  vars_files:
+    - common-vars.yml
+    - media-vars.yml
+    - storage-vars.yml
+    - ../private_vars_media.yml
+  vars:
+    - production: True
+    - user_name: "{{ansible_ssh_user}}"
+  roles:
+    - { role: deps, tags: configure }
+    - { role: wgregorian.sumocollector, tags: configure, become: yes }
+    - { role: jtyr.ulimit, tags: configure, become: yes }
+    - { role: monitoring, tags: configure }
+    - { role: go, tags: configure }
+    - { role: seaweedfs, tags: deploy }

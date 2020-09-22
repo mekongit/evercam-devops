@@ -1,0 +1,20 @@
+- name: Source asdf in bashrc
+  lineinfile:
+    line: "source /home/{{user_name}}/.asdf/asdf.sh"
+    dest: "/home/{{user_name}}/.bash_profile"
+    create: yes
+    owner: "{{user_name}}"
+  become_user: "{{ user_name }} -i"
+
+- name: Add asdf plugins for Node
+  command: "bash -lc 'asdf plugin-add nodejs https://github.com/HashNuke/asdf-nodejs.git'"
+  failed_when: false
+  become_user: "{{ user_name }} -i"
+
+- name: Install Node using asdf
+  command: "bash -lc 'asdf install nodejs 6.3.1'"
+  become_user: "{{ user_name }} -i"
+
+- name: Set Node version using asdf
+  command: "bash -lc 'asdf global nodejs 6.3.1'"
+  become_user: "{{ user_name }} -i"

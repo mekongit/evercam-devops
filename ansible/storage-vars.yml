@@ -1,0 +1,2 @@
+storage_dir: /storage
+seaweedfs_path: /opt/go/bin/weed

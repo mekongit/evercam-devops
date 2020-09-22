@@ -1,0 +1,32 @@
+[Unit]
+Description=Evercam Media
+After=network.target
+
+[Service]
+Type=forking
+LimitNOFILE=1000000
+User={{user_name}}
+Group={{user_name}}
+Environment=HOME=/home/{{user_name}}
+Environment=LANGUAGE=en_US:en
+Environment=LS_ALL=en_US.UTF-8
+Environment=ERL_MAX_PORTS=10240
+Environment=ERL_MAX_ETS_TABLES=7000
+Environment=PORT=4000
+Environment=MIX_ENV=prod
+Environment=EVERCAM_API=https://api.evercam.io
+{% for key, value in env_vars.items() %}
+Environment={{key.upper()}}={{value}}
+{% endfor %}
+
+WorkingDirectory=/opt/evercam_media
+ExecStart=/opt/evercam_media/bin/evercam_media daemon
+ExecStop=/opt/evercam_media/bin/evercam_media stop
+WatchdogSec=21600
+Restart=always
+RestartSec=5
+Environment=LANG=en_US.UTF-8
+SyslogIdentifier=evercam_media
+
+[Install]
+WantedBy=multi-user.target

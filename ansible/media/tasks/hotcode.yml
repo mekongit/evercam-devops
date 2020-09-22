@@ -1,0 +1,87 @@
+- name: Register evercam-media local commit hash
+  local_action:
+    shell
+    chdir={{local_media_dir}}
+    git rev-parse --short HEAD
+  register: local_commit_hash
+
+- name: List files in build directory
+  command: "ls {{build_dir}}/_build"
+  register: dir_out
+
+- name: Stat build directory
+  stat: path={{build_dir}}/_build
+  register: _build
+
+- name: configure ssh to use ansible key for github.com
+  template:
+    src: ssh_config.j2
+    dest: /root/.ssh/config
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Clone evercam-media
+  git:
+    repo: ssh://git@github.com/evercam/evercam-server2.git
+    key_file: /root/.ssh/id_rsa.github
+    dest: "{{build_dir}}/"
+    version: "{{local_commit_hash.stdout}}"
+
+- name: Get evercam-media dependencies
+  shell: "bash -lc '{{mix_env_vars}} {{media_env_vars}} mix deps.get'"
+  args:
+    chdir: "{{build_dir}}"
+
+- name: Touch mix file for new build release.
+  shell: "bash -lc 'touch mix.exs'"
+  args:
+    chdir: "{{build_dir}}"
+
+- name: Compile evercam-media application
+  shell: "bash -lc '{{mix_env_vars}} {{media_env_vars}} mix compile'"
+  args:
+    chdir: "{{build_dir}}"
+  failed_when: False
+
+- name: Compile again so any flaky dependencies are recompiled
+  shell: "bash -lc '{{mix_env_vars}} {{media_env_vars}} mix compile'"
+  args:
+    chdir: "{{build_dir}}"
+
+- name: Build evercam-media application release
+  shell: "bash -lc '{{mix_env_vars}} {{media_env_vars}} mix distillery.release --upgrade'"
+  args:
+    chdir: "{{build_dir}}"
+
+- name: Register the version of the release
+  shell: "cat {{build_dir}}/_build/prod/rel/evercam_media/releases/start_erl.data | awk '{print $2}'"
+  register: evercam_media_version
+
+- name: Describe the generated APPUP
+  shell: "cat {{build_dir}}/_build/prod/rel/evercam_media/lib/evercam_media-{{evercam_media_version.stdout}}/ebin/evercam_media.appup"
+
+- name: Ensure there is a directory for the application
+  file: path="{{remote_media_dir}}" state=directory
+
+- name: Copy new release to {{remote_media_dir}}
+  command: cp -r {{build_dir}}/_build/prod/rel/evercam_media/releases/{{evercam_media_version.stdout}} {{remote_media_dir}}/releases/{{evercam_media_version.stdout}}
+
+- name: Get evercam-media last commit message
+  local_action:
+    shell
+    chdir={{local_media_dir}}
+    git log -n 1 --pretty=format:%s $hash
+  register: local_commit_message
+
+- name: Upgrade to new version
+  command: "{{remote_media_dir}}/bin/evercam_media upgrade {{evercam_media_version.stdout}}"
+
+- name: Send deploy email
+  shell: "curl -s --user 'api:{{mailgun_key}}' {{mailgun_domain}}/messages -F from='noreply <support@evercam.io>' -F to=devs@evercam.io -F subject='Evercam Server New Deploy (HotCode)' --form-string html='<html>{{deploy_user}} deployed app: {{local_commit_hash.stdout}}<br />Azhar Malik: {{local_commit_message.stdout}}</html>'"
+
+- name: Display post upgrade message
+  debug:
+    msg:
+      - 'Evercam Server release has been upgraded.'
+      - '- New Version: {{evercam_media_version.stdout}}'

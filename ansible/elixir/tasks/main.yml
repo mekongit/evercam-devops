@@ -1,0 +1,84 @@
+- name: Check if Goon is present
+  stat:
+    path: /root/.asdf
+  register: asdf_present
+
+- name: Install asdf
+  shell: git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.2.0
+  become: yes
+  when: asdf_present.stat.exists == False
+
+- name: Echo asdf commands
+  command: "echo '. $HOME/.asdf/asdf.sh' >> ~/.bashrc && echo '. $HOME/.asdf/completions/asdf.bash' >> ~/.bashrc"
+  become_user: "{{ user_name }} -i"
+  when: asdf_present.stat.exists == False
+
+- name: Source asdf in bashrc
+  lineinfile:
+    line: "source /home/{{user_name}}/.asdf/asdf.sh"
+    dest: "/home/{{user_name}}/.bash_profile"
+    owner: "{{user_name}}"
+    create: yes
+  become_user: "{{ user_name }} -i"
+
+- name: Add asdf plugins for Elixir and Erlang
+  command: "bash -lc 'asdf plugin-add {{item}} https://github.com/asdf-vm/asdf-{{item}}.git'"
+  with_items:
+    - erlang
+    - elixir
+  failed_when: false
+  become_user: "{{ user_name }} -i"
+
+- name: Install Erlang using asdf
+  command: "bash -lc 'asdf install erlang {{erlang_version}}'"
+  become_user: "{{ user_name }} -i"
+  become: yes
+
+- name: Set Erlang version using asdf
+  command: "bash -lc 'asdf global erlang {{erlang_version}}'"
+  become_user: "{{ user_name }} -i"
+
+- name: Install Elixir using asdf
+  command: "bash -lc 'asdf install elixir {{elixir_version}}'"
+  become_user: "{{ user_name }} -i"
+  become: yes
+
+- name: Set Elixir version using asdf
+  command: "bash -lc 'asdf global elixir {{elixir_version}}'"
+  become_user: "{{ user_name }} -i"
+
+- name: Install hex
+  shell: mix local.hex --force
+  become_user: "{{ user_name }} -i"
+  become: yes
+
+- name: Install rebar
+  shell: mix local.rebar --force
+  become_user: "{{ user_name }} -i"
+  become: yes
+
+- name: Check if Goon is present
+  stat:
+    path: /usr/local/bin/goon
+  register: goon_present
+
+- name: Download Goon
+  get_url:
+    url: https://github.com/alco/goon/releases/download/v1.1.1/goon_linux_amd64.tar.gz
+    dest: /tmp/goon_linux_amd64.tar.gz
+  when: goon_present.stat.exists == False
+
+- name: Unpack Goon
+  command: tar -xvzf /tmp/goon_linux_amd64.tar.gz
+  args:
+    chdir: /tmp
+    creates: /tmp/goon
+  when: goon_present.stat.exists == False
+
+- name: Add Goon to PATH
+  become: yes
+  command: mv /tmp/goon /usr/local/bin
+  args:
+    creates: /usr/local/bin/goon
+    removes: /tmp/goon
+  when: goon_present.stat.exists == False

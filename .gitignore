@@ -1,0 +1,6 @@
+.vagrant
+*.key
+*.retry
+*.pem
+private_vars_devops.yml
+private_vars_media.yml

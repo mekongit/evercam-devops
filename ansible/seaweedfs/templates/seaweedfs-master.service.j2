@@ -1,0 +1,21 @@
+[Unit]
+Description=SeaweedFS Master
+After=network.target
+
+[Service]
+Type=simple
+User={{user_name}}
+Group={{user_name}}
+LimitNOFILE=1000000
+Environment=HOME=/home/{{user_name}}
+Environment=LANGUAGE=en_US:en
+Environment=LS_ALL=en_US.UTF-8
+
+ExecStart={{seaweedfs_path}} -v=0 server -filer=true -ip={{seaweedfs_master_ip}} -dir={{storage_dir}} -volume.max=3000 -volume.images.fix.orientation=false -pulseSeconds=5
+Restart=always
+RestartSec=5
+Environment=LANG=en_US.UTF-8
+SyslogIdentifier=seaweedfs
+
+[Install]
+WantedBy=multi-user.target

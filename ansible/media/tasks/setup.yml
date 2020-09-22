@@ -1,0 +1,40 @@
+- name: Ensure remote media dir exists
+  file:
+    path: "{{remote_media_dir}}"
+    state: directory
+    owner: "{{ansible_ssh_user}}"
+  become: yes
+
+- name: Ensure /etc/systemd/system dir exists
+  file:
+    path: /etc/systemd/system
+    state: directory
+  become: yes
+
+- name: Copy evercam_media service
+  become: yes
+  template:
+    src: evercam_media.service.j2
+    dest: /etc/systemd/system/evercam_media.service
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Enable the evercam_media service
+  shell: systemctl enable evercam_media.service
+  become: yes
+  failed_when: False
+
+- name: Copy rtmp_statistics service
+  become: yes
+  template:
+    src: rtmp_statistics.service.j2
+    dest: /etc/systemd/system/rtmp_statistics.service
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Enable the rtmp_statistics service
+  shell: systemctl enable rtmp_statistics.service
+  become: yes
+  failed_when: False

@@ -1,0 +1,99 @@
+- name: Ensure /usr/local/bin dir exists
+  file:
+    path: /usr/local/bin
+    state: directory
+  become: yes
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: yes
+
+- name: Make sure the required packages are installed
+  become: yes
+  apt:
+    pkg: "{{item}}"
+    state: present
+  with_items:
+    - build-essential
+    - curl
+    - git
+    - htop
+    - iotop
+    - libcurl4-openssl-dev
+    - libgl1-mesa-dev
+    - libglu1-mesa-dev
+    - libgmp3-dev
+    - libjpeg-dev
+    - libncurses5-dev
+    - libpq-dev
+    - libssh-dev
+    - m4
+    - make
+    - python
+    - python-pip
+    - python-psycopg2
+    - python-pycurl
+    - unattended-upgrades
+    - unixodbc-dev
+    - unzip
+
+- name: Install asdf
+  git:
+    repo: "https://github.com/HashNuke/asdf"
+    dest: "/home/{{user_name}}/.asdf"
+    update: yes
+  become_user: "{{ user_name }} -i"
+
+- name: Install Heroku Toolbelt
+  shell: wget -O- https://toolbelt.heroku.com/install-ubuntu.sh | sh
+  become: yes
+
+- name: Set fs.file-max
+  sysctl:
+    name: fs.file-max
+    value: 12000500
+    state: present
+  become: yes
+
+- name: Set fs.nr_open
+  sysctl:
+    name: fs.nr_open
+    value: 20000500
+    state: present
+  become: yes
+
+- name: Set net.ipv4.tcp_mem
+  sysctl:
+    name: net.ipv4.tcp_mem
+    value: '10000000 10000000 10000000'
+    state: present
+  become: yes
+
+- name: Set net.ipv4.tcp_rmem
+  sysctl:
+    name: net.ipv4.tcp_rmem
+    value: '8388608 8388608 8388608'
+    state: present
+  become: yes
+
+- name: Set net.ipv4.tcp_wmem
+  sysctl:
+    name: net.ipv4.tcp_wmem
+    value: '4096 65536 8388608'
+    state: present
+  become: yes
+
+- name: Set net.core.rmem_max
+  sysctl:
+    name: net.core.rmem_max
+    value: 8388608
+    state: present
+  become: yes
+
+- name: Set net.core.wmem_max
+  sysctl:
+    name: net.core.wmem_max
+    value: 8388608
+    state: present
+  become: yes

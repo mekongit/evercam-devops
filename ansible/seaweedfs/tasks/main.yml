@@ -1,0 +1,39 @@
+- name: Install SeaweedFS
+  command: "bash -lc 'go get github.com/chrislusf/seaweedfs/weed'"
+  tags: configure
+
+- name: Ensure /etc/systemd/system dir exists
+  file:
+    path: /etc/systemd/system
+    state: directory
+  become: yes
+
+- name: Copy SeaweedFS volume service
+  become: yes
+  template:
+    src: seaweedfs-volume.service.j2
+    dest: /etc/systemd/system/seaweedfs-volume.service
+    owner: root
+    group: root
+    mode: 0755
+  tags: deploy,volume
+
+- name: Enable the SeaweedFS volume service
+  shell: systemctl enable seaweedfs-volume.service
+  become: yes
+  tags: deploy,volume
+
+- name: Copy seaweedfs master service
+  become: yes
+  template:
+    src: seaweedfs-master.service.j2
+    dest: /etc/systemd/system/seaweedfs-master.service
+    owner: root
+    group: root
+    mode: 0755
+  tags: deploy,master
+
+- name: Enable SeaweedFS master service
+  shell: systemctl enable seaweedfs-master.service
+  become: yes
+  tags: deploy,master

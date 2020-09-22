@@ -1,0 +1,70 @@
+- name: Register evercam-media local commit hash
+  local_action:
+    shell
+    chdir={{local_media_dir}}
+    git rev-parse --short HEAD
+  register: local_commit_hash
+
+- name: Delete build directory
+  file:
+    path: "{{build_dir}}"
+    state: absent
+
+- name: configure ssh to use ansible key for github.com
+  template:
+    src: ssh_config.j2
+    dest: /root/.ssh/config
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Clone evercam-media
+  git:
+    repo: ssh://git@github.com/evercam/evercam-server2.git
+    key_file: /root/.ssh/id_rsa.github
+    dest: "{{build_dir}}/"
+    version: "{{local_commit_hash.stdout}}"
+
+- name: Get evercam-media dependencies
+  shell: "bash -lc '{{mix_env_vars}} {{media_env_vars}} mix deps.get'"
+  args:
+    chdir: "{{build_dir}}"
+
+- name: Compile evercam-media application
+  shell: "bash -lc '{{mix_env_vars}} {{media_env_vars}} mix compile'"
+  args:
+    chdir: "{{build_dir}}"
+  failed_when: False
+
+- name: Compile again so any flaky dependencies are recompiled
+  shell: "bash -lc '{{mix_env_vars}} {{media_env_vars}} mix compile'"
+  args:
+    chdir: "{{build_dir}}"
+
+- name: Build evercam-media application release
+  shell: "bash -lc '{{mix_env_vars}} {{media_env_vars}} mix distillery.release'"
+  args:
+    chdir: "{{build_dir}}"
+
+- name: Register the version of the release
+  shell: "cat {{build_dir}}/_build/prod/rel/evercam_media/releases/start_erl.data | awk '{print $2}'"
+  register: evercam_media_version
+
+- name: Ensure there is a directory for the application
+  file: path="{{remote_media_dir}}" state=directory
+
+- name: Copy the release to the application directory
+  unarchive:
+    copy: no
+    src: "{{build_dir}}/_build/prod/rel/evercam_media/releases/{{evercam_media_version.stdout}}/evercam_media.tar.gz"
+    dest: "{{remote_media_dir}}"
+
+- name: Get evercam-media last commit message
+  local_action:
+    shell
+    chdir={{local_media_dir}}
+    git log -n 1 --pretty=format:%s $hash
+  register: local_commit_message
+
+- name: Send deploy email
+  shell: "curl -s --user 'api:{{mailgun_key}}' {{mailgun_domain}}/messages -F from='noreply <support@evercam.io>' -F to=devs@evercam.io -F subject='Evercam Server New Deploy' --form-string html='<html>{{deploy_user}} deployed app: {{local_commit_hash.stdout}}<br />Azhar Malik: {{local_commit_message.stdout}}</html>'"

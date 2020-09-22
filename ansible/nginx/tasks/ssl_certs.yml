@@ -1,0 +1,39 @@
+- name: Check if SSL certificates are present on the local machine
+  local_action: stat
+  args:
+    path: "{{playbook_dir}}/nginx/files/media_evercam_io.key"
+  register: local_key
+  become: no
+
+- name: Check if SSL certificates are present on the local machine
+  local_action: stat
+  args:
+    path: "{{playbook_dir}}/nginx/files/media_evercam_io.pem"
+  register: local_cert
+  become: no
+
+- name: Generate SSL key
+  shell: openssl genrsa -out media_evercam_io.key 2048
+  args:
+    chdir: "/etc/ssl/"
+  when: production == False and local_key.stat.exists == False
+
+- name: Generate SSL certificate
+  shell: openssl req -new -x509 -key media_evercam_io.key -out media_evercam_io.pem -days 3650 -subj /CN=media.evercam.io
+  args:
+    chdir: "/etc/ssl/"
+  when: production == False and local_key.stat.exists == False
+
+- name: Copy local SSL .pem file
+  become: yes
+  copy:
+    src: "media_evercam_io.pem"
+    dest: "/etc/ssl/media_evercam_io.pem"
+  when: local_key.stat.exists == True
+
+- name: Copy local SSL .key file
+  become: yes
+  copy:
+    src: "media_evercam_io.key"
+    dest: "/etc/ssl/media_evercam_io.key"
+  when: local_key.stat.exists == True

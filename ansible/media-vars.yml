@@ -1,0 +1,26 @@
+build_dir: /tmp/build-media
+remote_media_dir: /opt/evercam_media
+local_media_dir: ~/evercam/evercam-server
+version_to_deploy: "{{VERSION|default('master')}}"
+
+erlang_version: "21.2"
+elixir_version: "1.8.0"
+
+storage_dir: /storage
+
+media_env_vars: "{% for key, value in env_vars.items() %}{{key.upper()}}={{value}} {% endfor %}"
+mix_env_vars: "MIX_ENV=prod PORT=4000"
+
+sumocollector_installer_download: https://collectors.eu.sumologic.com/rest/download/deb/64
+sumologic_collector_accessid: "{{sumo_logic_id}}"
+sumologic_collector_accesskey: "{{sumo_logic_key}}"
+sumologic_collector_application_log_path:
+  - name: "evercam-server"
+    path: "/opt/evercam_media/tmp/log/erlang.log.*"
+    use_multiline: false
+    category: "evercam-server"
+sumologic_collector_default_log_path:
+  - name: "evercam-server"
+    path: "/opt/evercam_media/tmp/log/erlang.log.*"
+    use_multiline: false
+    category: "evercam-server"

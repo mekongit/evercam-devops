@@ -1,0 +1,21 @@
+[Unit]
+Description=RTMP Statistics
+After=network.target
+
+[Service]
+Type=simple
+LimitNOFILE=1000000
+User={{user_name}}
+Group={{user_name}}
+Environment=HOME=/opt/nginx-rtmp-monitoring/
+Environment=LANGUAGE=en_US:en
+Environment=LS_ALL=en_US.UTF-8
+
+ExecStart=/usr/bin/node /opt/nginx-rtmp-monitoring/server.js
+Restart=always
+RestartSec=5
+Environment=LANG=en_US.UTF-8
+SyslogIdentifier=nginx_rtmp
+
+[Install]
+WantedBy=multi-user.target

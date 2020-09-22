@@ -1,0 +1,11 @@
+#!/bin/bash
+
+status="$(curl -Is  https://media.evercam.io/v1/ | head -1 | awk '{print $2}')"
+
+if [ $status == "502" ]; then
+   pid="$(ps aux | grep evercam_media/bin/evercam_media | grep -v grep | awk '{print $2}')"
+   kill -9 $pid
+   /opt/evercam_media/bin/evercam_media start
+elif ! (ps aux | grep evercam_media/bin/evercam_media | grep -v grep > /dev/null); then
+   /opt/evercam_media/bin/evercam_media start
+fi
