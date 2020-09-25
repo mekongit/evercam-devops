@@ -1,6 +1,9 @@
 evercam_dash_dir: /vagrant/evercam-dashboard
 evercam_media_dir: /vagrant/evercam-media
 
+erlang_version: "21.2"
+elixir_version: "1.8.0"
+
 postgresql_version: 9.4
 postgresql_ext_postgis_version: 2.1
 postgresql_ext_install_postgis: yes
