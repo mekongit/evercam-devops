@@ -163,7 +163,7 @@ These instructions assume that you're running either Linux or OS X (Ansible does
 ##### Clone this repository and it's submodules
 
 ```
-git clone https://github.com/evercam/evercam-devops.git && cd evercam-devops
+git clone https://github.com/mekongit/evercam-devops.git && cd evercam-devops
 git pull && git submodule init && git submodule update && git submodule status
 git submodule foreach --recursive "git checkout master && git pull"
 ```
