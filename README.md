@@ -177,7 +177,7 @@ sudo ansible-galaxy install -r ansible/requirements.yml --force
 ##### Copy example `.env` file into required directories
 
 ```
-cp .env evercam-dashboard/ && cp .env evercam-models/ && cp .env evercam-media/
+cp .env evercam-dashboard/ && cp .env evercam-models/ && cp .env evercam-server/
 ```
 
 ##### Run Vagrant and ssh into the VM
